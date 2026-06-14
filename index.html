@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Business Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='70' font-size='70' text-anchor='middle'>📊</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Business Tracker</h1>
+            <div class="date-box">
+                <label>Date:</label>
+                <input type="date" id="txtDate">
+            </div>
+        </div>
+
+        <!-- Mode Selection (Desktop) / Bottom Nav (Mobile) -->
+        <div class="mode-section">
+            <button class="mode-btn active" data-mode="stock">📦 Stock In</button>
+            <button class="mode-btn" data-mode="order">🛒 Order</button>
+            <button class="mode-btn" data-mode="payment">💰 Payment</button>
+            <button class="mode-btn" data-mode="sale">💵 Cash Sale</button>
+        </div>
+       
+
+        <!-- Main Form Card -->
+        <div class="form-card">
+            <h3 id="formTitle">Stock In Entry</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="partyLabel">Supplier:</label>
+                    <select id="cmbParty"></select>
+                    <button class="small-btn" id="btnNewParty">+ New</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Item:</label>
+                    <select id="cmbItem"></select>
+                    <button class="small-btn" id="btnAddProduct">+ New</button>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="qtyLabel">Quantity:</label>
+                    <input type="number" id="txtQuantity" step="0.01" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label id="priceLabel">Cost per Unit:</label>
+                    <input type="number" id="txtPrice" step="0.01">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Payment Reference:</label>
+                    <input type="text" id="txtPaymentRef" placeholder="Optional">
+                </div>
+            </div>
+        <div class="form-actions">
+            <button class="primary-btn" id="btnSubmit">✓ Submit</button>
+            <button class="secondary-btn" id="btnStatement">📄 Statement</button>
+            <button class="secondary-btn" id="btnExportData">💾 Export</button>
+            <button class="secondary-btn" id="btnEditMaster">✎ Edit Master</button>
+            <button class="danger-btn" id="btnResetAll">⚠️ Reset All Data</button>
+            <button class="danger-btn" id="btnClose">✖ Close</button>
+           
+            </div>
+        </div>
+
+        <!-- Transaction History Tabs -->
+        <div class="history-section">
+            <div class="history-header">
+                <h3>📜 Transaction History</h3>
+                <div class="history-tabs">
+                    <button class="tab-btn active" data-tab="stock-tab">Stock In</button>
+                    <button class="tab-btn" data-tab="order-tab">Orders</button>
+                    <button class="tab-btn" data-tab="payment-tab">Payments</button>
+                </div>
+            </div>
+            
+            <div id="stock-tab" class="history-tab active">
+                <div class="history-controls">
+                    <input type="text" id="filterStock" placeholder="Filter by item, supplier..." class="filter-input">
+                    <button class="small-btn" id="refreshStockHistory">⟳</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead><tr><th>Date</th><th>Supplier</th><th>Item</th><th>Qty</th><th>Cost/Unit</th><th>Total</th></tr></thead>
+                        <tbody id="stockHistoryList"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="order-tab" class="history-tab">
+                <div class="history-controls">
+                    <input type="text" id="filterOrder" placeholder="Filter by client, item..." class="filter-input">
+                    <button class="small-btn" id="refreshOrderHistory">⟳</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead><tr><th>Date</th><th>Client</th><th>Item</th><th>Qty</th><th>Price/Unit</th><th>Total</th><th>Payment Ref</th></tr></thead>
+                        <tbody id="orderHistoryList"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="payment-tab" class="history-tab">
+                <div class="history-controls">
+                    <input type="text" id="filterPayment" placeholder="Filter by client..." class="filter-input">
+                    <button class="small-btn" id="refreshPaymentHistory">⟳</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead><tr><th>Date</th><th>Client</th><th>Payment Ref</th><th>Amount</th></tr></thead>
+                        <tbody id="paymentHistoryList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Panels -->
+        <div class="dashboard">
+            <div class="panel">
+                <div class="panel-header"><h3>📦 Stock Inventory</h3><button class="refresh-btn" id="refreshStock">⟳</button></div>
+                <div class="panel-body"><div style="overflow-x:auto;"><table><thead><tr><th>Item</th><th>Stock In</th><th>Stock Out</th><th>Balance</th><th>Buy Price</th></tr></thead><tbody id="stockList"></tbody></table></div></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>👥 Client Summary</h3><button class="refresh-btn" id="refreshClients">⟳</button></div>
+                <div class="panel-body"><div style="overflow-x:auto;"><table><thead><tr><th>Client</th><th>Orders</th><th>Payments</th><th>Balance</th><th>Status</th></tr></thead><tbody id="clientList"></tbody></table></div></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>📈 Business Insights</h3><button class="refresh-btn" id="refreshInsights">⟳</button></div>
+                <div class="panel-body"><div style="overflow-x:auto;"><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody id="insightList"></tbody></table></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation (hidden on desktop) -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-mode="stock"><span class="nav-icon">📦</span><span class="nav-label">Stock</span></button>
+        <button class="nav-item" data-mode="order"><span class="nav-icon">🛒</span><span class="nav-label">Order</span></button>
+        <button class="nav-item" data-mode="payment"><span class="nav-icon">💰</span><span class="nav-label">Pay</span></button>
+        <button class="nav-item" data-mode="sale"><span class="nav-icon">💵</span><span class="nav-label">Sale</span></button>
+        <button class="nav-item" data-mode="insights"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
+    </div>
+
+    <!-- Modal for Edit/Delete -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="modalTitle">Edit Transaction</h3>
+            <div id="editFormContent"></div>
+            <div class="modal-buttons">
+                <button id="saveEdit" class="primary-btn">💾 Save Changes</button>
+                <button id="deleteTransaction" class="danger-btn">🗑️ Delete Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Master Edit -->
+    <div id="editMasterModal" class="modal">
+        <div class="modal-content">
+            <span class="close-master">&times;</span>
+            <h3>Edit Master Data</h3>
+            <select id="editMasterType">
+                <option value="product">Product</option>
+                <option value="client">Client</option>
+                <option value="supplier">Supplier</option>
+            </select>
+            <input type="text" id="editOldValue" placeholder="Current Name">
+            <input type="text" id="editNewValue" placeholder="New Name">
+            <input type="number" id="editWeight" placeholder="Weight (KG)" step="0.01" style="display:none">
+            <select id="editRole" style="display:none">
+                <option value="Client">Client</option>
+                <option value="Supplier">Supplier</option>
+            </select>
+            <button id="saveMasterEdit">Save Changes</button>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

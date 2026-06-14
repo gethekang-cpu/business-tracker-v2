@@ -1,0 +1,36 @@
+{
+  "name": "uyu002",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
+    "frontend": "serve public -l 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makuyu/business-tracker-v2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Makuyu/business-tracker-v2/issues"
+  },
+  "homepage": "https://github.com/Makuyu/business-tracker-v2#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "cors": "^2.8.6",
+    "dexie": "^4.4.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "idb": "^8.0.3",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "serve": "^14.2.6"
+  }
+}
