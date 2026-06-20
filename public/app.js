@@ -2,7 +2,8 @@
 import { initOfflineDB, getCachedItems, getCachedParties, addConnectivityListeners, addToSyncQueue, cacheTransaction } from './db-offline.js';
 import { syncPendingData } from './sync.js';
 
-const API_BASE = 'http://localhost:3001';
+
+const API_BASE = 'https://kuyu-business-tracker-001.vercel.app';
 
 // ==================== GLOBAL VARIABLES ====================
 let currentMode = 'stock';
