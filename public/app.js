@@ -5,6 +5,9 @@ import { syncPendingData } from './sync.js';
 
 const API_BASE = 'https://kuyu-business-tracker-001.vercel.app';
 
+
+
+
 // ==================== GLOBAL VARIABLES ====================
 let currentMode = 'stock';
 let isOnlineFlag = navigator.onLine;
