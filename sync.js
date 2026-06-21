@@ -1,4 +1,5 @@
-// public/sync.js - Sync service for offline/online coordination
+//sync.js - Sync service for offline/online coordination
+
 import { getPendingSync, removeFromSyncQueue, initOfflineDB, cacheItems, cacheParties, cacheTransaction } from './db-offline.js';
 
 const API_BASE = 'http://localhost:3001';

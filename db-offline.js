@@ -1,4 +1,4 @@
-// public/db-offline.js - Clean version using local idb
+//db-offline.js - Clean version using local idb
 import { openDB } from './lib/idb.js';
 
 let db = null;
