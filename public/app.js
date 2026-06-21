@@ -3,7 +3,7 @@ import { initOfflineDB, getCachedItems, getCachedParties, addConnectivityListene
 import { syncPendingData } from './sync.js';
 
 
-const API_BASE = 'https://kuyu-business-tracker-001.vercel.app';
+const API_BASE = ''; // Use relative path - Vercel handles routing
 
 
 
