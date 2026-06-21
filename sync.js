@@ -1,5 +1,5 @@
 // public/sync.js - Sync service for offline/online coordination
-import { getPendingSync, removeFromSyncQueue, initOfflineDB, cacheItems, cacheParties, cacheTransaction } from './public/db-offline.js';
+import { getPendingSync, removeFromSyncQueue, initOfflineDB, cacheItems, cacheParties, cacheTransaction } from './db-offline.js';
 
 const API_BASE = 'http://localhost:3001';
 
@@ -111,7 +111,7 @@ export async function saveWithOfflineSupport(endpoint, method, body, storeName =
                 
                 return { success: true, online: true, data: result.data, message: 'Saved to cloud' };
             } else {
-                const { addToSyncQueue } = await import('./public/db-offline.js');
+                const { addToSyncQueue } = await import('./db-offline.js');
                 await addToSyncQueue(endpoint, method, body);
                 
                 if (storeName && transactionId) {
@@ -121,7 +121,7 @@ export async function saveWithOfflineSupport(endpoint, method, body, storeName =
                 return { success: true, online: false, queued: true, message: 'Saved locally (will sync later)' };
             }
         } catch (error) {
-            const { addToSyncQueue } = await import('./public/db-offline.js');
+            const { addToSyncQueue } = await import('./db-offline.js');
             await addToSyncQueue(endpoint, method, body);
             
             if (storeName && transactionId) {
@@ -131,7 +131,7 @@ export async function saveWithOfflineSupport(endpoint, method, body, storeName =
             return { success: true, online: false, queued: true, message: 'Saved locally (will sync when online)' };
         }
     } else {
-        const { addToSyncQueue } = await import('./public/db-offline.js');
+        const { addToSyncQueue } = await import('./db-offline.js');
         await addToSyncQueue(endpoint, method, body);
         
         if (storeName && transactionId) {
