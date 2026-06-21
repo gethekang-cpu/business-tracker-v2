@@ -1,4 +1,4 @@
-/* style.css - Responsive Business Tracker */
+/* style.css - Complete Business Tracker */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -144,6 +144,7 @@ body {
     font-size: 0.8rem;
 }
 
+/* Form Action Buttons - COMPLETE */
 .form-actions {
     display: flex;
     gap: 12px;
@@ -151,7 +152,7 @@ body {
     margin-top: 10px;
 }
 
-.primary-btn, .secondary-btn {
+.primary-btn, .secondary-btn, .danger-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 40px;
@@ -169,7 +170,23 @@ body {
     background: #f0f2f5;
     color: #333;
 }
-/* Edit/Delete buttons */
+
+.danger-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.danger-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.primary-btn:hover, .secondary-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+/* Edit/Delete buttons in tables */
 .edit-btn, .delete-btn {
     padding: 4px 8px;
     margin: 0 2px;
@@ -184,9 +201,17 @@ body {
     color: #333;
 }
 
+.edit-btn:hover {
+    background: #e0a800;
+}
+
 .delete-btn {
     background: #dc3545;
     color: white;
+}
+
+.delete-btn:hover {
+    background: #c82333;
 }
 
 /* Modal styles */
@@ -213,10 +238,16 @@ body {
 
 .close, .close-master {
     position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 24px;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
     cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover, .close-master:hover {
+    color: #333;
 }
 
 .transaction-detail-row {
@@ -241,19 +272,6 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 20px;
-}
-
-.danger-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.danger-btn:hover {
-    background: #c82333;
 }
 
 /* History Section */
@@ -428,6 +446,14 @@ body {
     font-weight: 500;
 }
 
+/* Online Status Indicator */
+#onlineStatus {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     body {
@@ -452,7 +478,7 @@ body {
         flex-direction: column;
     }
     
-    .primary-btn, .secondary-btn {
+    .primary-btn, .secondary-btn, .danger-btn {
         width: 100%;
     }
     
@@ -467,71 +493,15 @@ body {
     .history-table th, .history-table td {
         padding: 6px 4px;
     }
+    
+    .modal-content {
+        margin: 20% auto;
+        width: 95%;
+    }
 }
 
 @media (min-width: 769px) {
     .bottom-nav {
         display: none !important;
     }
-    /* Additional Button Styles for Edit Master, Reset, Close */
-.form-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.primary-btn, .secondary-btn, .danger-btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 40px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.primary-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.secondary-btn {
-    background: #f0f2f5;
-    color: #333;
-}
-
-.danger-btn {
-    background: #dc3545;
-    color: white;
-}
-
-.danger-btn:hover {
-    background: #c82333;
-    transform: translateY(-1px);
-}
-
-.primary-btn:hover, .secondary-btn:hover {
-    transform: translateY(-1px);
-    opacity: 0.9;
-}
-
-/* Ensure all buttons are visible */
-button {
-    font-size: 14px;
-}
-
-/* Fix for modal close buttons */
-.close, .close-master {
-    position: absolute;
-    right: 20px;
-    top: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
-}
-
-.close:hover, .close-master:hover {
-    color: #333;
-}
 }
