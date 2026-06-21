@@ -31,7 +31,71 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+// ==================== MISSING HELPER FUNCTIONS ====================
 
+// Get latest purchase price for an item (from stock_in)
+async function getPurchasePrice(itemName) {
+    try {
+        const response = await fetch(`${API_BASE}/api/history?limit=100`);
+        const result = await response.json();
+        if (result.success) {
+            const stockEntries = result.data.filter(t => 
+                t.type === 'stock_in' && t.item === itemName
+            );
+            if (stockEntries.length > 0) {
+                // Get the latest entry with highest cost
+                let maxCost = 0;
+                stockEntries.forEach(s => {
+                    if (s.cost_per_unit > maxCost) maxCost = s.cost_per_unit;
+                });
+                return maxCost;
+            }
+        }
+        return 0;
+    } catch (error) {
+        console.error('Failed to get purchase price:', error);
+        return 0;
+    }
+}
+
+// Validate payment reference (prevent duplicates)
+function validatePaymentRef(payRef, clientName, payAmount, settlements) {
+    if (!payRef || payRef.trim() === '') return true;
+    
+    // Check for exact duplicate
+    for (let settlement of settlements) {
+        if (settlement.payment_ref && 
+            settlement.payment_ref.toLowerCase() === payRef.toLowerCase()) {
+            alert(`⚠️ Duplicate Payment Reference detected!\nExisting: ${settlement.payment_ref}\nNew: ${payRef}`);
+            return false;
+        }
+    }
+    
+    // Check for possible duplicate (same client, amount, date)
+    const today = new Date().toISOString().split('T')[0];
+    for (let settlement of settlements) {
+        if (settlement.client === clientName && 
+            settlement.payment_amount === payAmount && 
+            settlement.date === today) {
+            const proceed = confirm(`⚠️ Possible duplicate payment detected.\nClient: ${clientName}\nAmount: ${payAmount}\nDate: ${today}\nProceed anyway?`);
+            if (!proceed) return false;
+        }
+    }
+    
+    return true;
+}
+
+// Calculate estimated profit
+function calculateEstimatedProfit(orders, purchasePrices) {
+    let revenue = 0;
+    let cost = 0;
+    orders.forEach(o => {
+        revenue += o.order_value || 0;
+        const purchasePrice = purchasePrices[o.item] || 0;
+        cost += o.quantity * purchasePrice;
+    });
+    return revenue - cost;
+}
 // ==================== HISTORY CACHE (Single Fetch) ====================
 async function getHistoryData() {
     if (isOnlineFlag) {
@@ -179,6 +243,26 @@ function populateParties(parties) {
     });
 }
 
+// Add payment validation for payment mode
+if (currentMode === 'payment') {
+    const settlements = await getSettlements();
+    if (!validatePaymentRef(paymentRef, party, price, settlements)) {
+        return;
+    }
+}
+// Helper to get settlements from API
+async function getSettlements() {
+    try {
+        const response = await fetch(`${API_BASE}/api/history?limit=1000`);
+        const result = await response.json();
+        if (result.success) {
+            return result.data.filter(t => t.type === 'payment');
+        }
+        return [];
+    } catch (error) {
+        return [];
+    }
+}
 // ==================== SUBMIT TRANSACTION ====================
 async function submitTransaction() {
     const date = document.getElementById('txtDate')?.value || new Date().toISOString().split('T')[0];
@@ -334,7 +418,16 @@ function refreshStockDisplayWithData(data) {
                 row.insertCell(0).innerText = escapeHtml(item.item);
                 row.insertCell(1).innerText = item.stock_in;
                 row.insertCell(2).innerText = item.stock_out || 0;
-                row.insertCell(3).innerText = item.balance;
+                
+                const balanceCell = row.insertCell(3);
+                balanceCell.innerText = item.balance;
+                // Low stock alert (threshold: 5)
+                if (item.balance <= 5 && item.balance > 0) {
+                    balanceCell.style.color = '#dc3545';
+                    balanceCell.style.fontWeight = 'bold';
+                    balanceCell.innerText = `⚠️ ${item.balance}`;
+                }
+                
                 row.insertCell(4).innerText = '-';
             }
         });
@@ -706,21 +799,11 @@ function closeApp() {
 }
 
 // ==================== STATEMENT & EXPORT ====================
+
 async function generateStatement() {
     const client = prompt('Enter client name:');
     if (!client) return;
-    try {
-        const response = await fetch(`${API_BASE}/api/statement?client=${encodeURIComponent(client)}`);
-        const result = await response.json();
-        if (result.success) {
-            const s = result.data.summary;
-            alert(`Client: ${client}\nTotal Orders: ${safeFormat(s.total_orders)}\nTotal Payments: ${safeFormat(s.total_payments)}\nBalance: ${safeFormat(s.outstanding_balance)}\nStatus: ${s.status}`);
-        } else {
-            alert('No data found for this client');
-        }
-    } catch (error) {
-        alert('Failed to generate statement');
-    }
+    await generateHTMLStatement(client);
 }
 
 async function exportData() {
@@ -741,6 +824,124 @@ async function exportData() {
     }
 }
 
+// ==================== HTML STATEMENT GENERATION ====================
+async function generateHTMLStatement(clientName) {
+    try {
+        // Fetch all data
+        const historyResponse = await fetch(`${API_BASE}/api/history?limit=1000`);
+        const historyResult = await historyResponse.json();
+        const dashboardResponse = await fetch(`${API_BASE}/api/dashboard`);
+        const dashboardResult = await dashboardResponse.json();
+        
+        if (!historyResult.success || !dashboardResult.success) {
+            alert('Failed to fetch data for statement');
+            return;
+        }
+        
+        // Filter client transactions
+        const allTx = historyResult.data || [];
+        const clientTx = allTx.filter(t => 
+            (t.client && t.client.toLowerCase() === clientName.toLowerCase()) ||
+            (t.supplier && t.supplier.toLowerCase() === clientName.toLowerCase())
+        );
+        
+        if (clientTx.length === 0) {
+            alert('No transactions found for this client');
+            return;
+        }
+        
+        // Calculate totals
+        let totalOrders = 0, totalPayments = 0;
+        clientTx.forEach(t => {
+            if (t.type === 'order' || t.type === 'sale') {
+                totalOrders += t.order_value || 0;
+            } else if (t.type === 'payment') {
+                totalPayments += t.payment_amount || 0;
+            }
+        });
+        const balance = totalOrders - totalPayments;
+        
+        // Build HTML
+        let html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Statement - ${escapeHtml(clientName)}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; }
+                h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                .info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th { background: #667eea; color: white; padding: 10px; text-align: left; }
+                td { padding: 10px; border-bottom: 1px solid #ddd; }
+                .total { background: #e9ecef; padding: 15px; border-radius: 8px; margin-top: 20px; }
+                .owing { color: #dc3545; font-weight: bold; }
+                .settled { color: #28a745; font-weight: bold; }
+                .footer { margin-top: 30px; font-size: 12px; color: #666; text-align: center; }
+            </style>
+        </head>
+        <body>
+            <h1>📄 Client Statement</h1>
+            <div class="info">
+                <p><strong>Client:</strong> ${escapeHtml(clientName)}</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Period:</strong> All transactions</p>
+            </div>
+            <table>
+                <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Debit (KSh)</th><th>Credit (KSh)</th></tr></thead>
+                <tbody>
+        `;
+        
+        clientTx.sort((a, b) => new Date(a.date) - new Date(b.date));
+        let runningBalance = 0;
+        
+        clientTx.forEach(t => {
+            const debit = t.type === 'order' || t.type === 'sale' ? (t.order_value || 0) : 0;
+            const credit = t.type === 'payment' ? (t.payment_amount || 0) : 0;
+            runningBalance = runningBalance + debit - credit;
+            html += `
+                <tr>
+                    <td>${t.date}</td>
+                    <td>${t.type}</td>
+                    <td>${escapeHtml(t.item || '-')}</td>
+                    <td>${t.quantity || '-'}</td>
+                    <td style="text-align:right">${debit.toFixed(2)}</td>
+                    <td style="text-align:right">${credit.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:bold;background:#f8f9fa;">
+                        <td colspan="4" style="text-align:right">TOTALS:</td>
+                        <td style="text-align:right">${totalOrders.toFixed(2)}</td>
+                        <td style="text-align:right">${totalPayments.toFixed(2)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div class="total">
+                <p><strong>Total Orders:</strong> ${totalOrders.toFixed(2)}</p>
+                <p><strong>Total Payments:</strong> ${totalPayments.toFixed(2)}</p>
+                <p><strong>Outstanding Balance:</strong> ${balance.toFixed(2)}</p>
+                <p><strong>Status:</strong> <span class="${balance > 0 ? 'owing' : 'settled'}">${balance > 0 ? 'Owing' : 'Settled'}</span></p>
+            </div>
+            <div class="footer">
+                <p>This is a computer-generated statement. No signature required.</p>
+            </div>
+        </body>
+        </html>
+        `;
+        
+        const win = window.open();
+        win.document.write(html);
+        win.document.close();
+    } catch (error) {
+        console.error('Statement generation error:', error);
+        alert('Failed to generate statement');
+    }
+}
 // ==================== ADD NEW PARTY/PRODUCT (With Offline Queue) ====================
 async function addNewProduct() {
     const name = prompt('Enter product name:');
