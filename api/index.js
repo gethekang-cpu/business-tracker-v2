@@ -372,4 +372,14 @@ app.delete('/api/reset', async (req, res) => {
 
 // Export for Vercel
 const serverless = require('serverless-http');
+
+// Start server locally
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+        console.log(`✅ Server running on http://localhost:${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    });
+}
+
 module.exports = serverless(app);
