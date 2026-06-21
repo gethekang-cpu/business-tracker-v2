@@ -57,7 +57,22 @@ async function getPurchasePrice(itemName) {
         return 0;
     }
 }
+// ==================== HELPER FUNCTIONS ====================
+// ... existing helpers ...
 
+// Helper to get settlements from API
+async function getSettlements() {
+    try {
+        const response = await fetch(`${API_BASE}/api/history?limit=1000`);
+        const result = await response.json();
+        if (result.success) {
+            return result.data.filter(t => t.type === 'payment');
+        }
+        return [];
+    } catch (error) {
+        return [];
+    }
+}
 // Validate payment reference (prevent duplicates)
 function validatePaymentRef(payRef, clientName, payAmount, settlements) {
     if (!payRef || payRef.trim() === '') return true;
@@ -243,26 +258,7 @@ function populateParties(parties) {
     });
 }
 
-// Add payment validation for payment mode
-if (currentMode === 'payment') {
-    const settlements = await getSettlements();
-    if (!validatePaymentRef(paymentRef, party, price, settlements)) {
-        return;
-    }
-}
-// Helper to get settlements from API
-async function getSettlements() {
-    try {
-        const response = await fetch(`${API_BASE}/api/history?limit=1000`);
-        const result = await response.json();
-        if (result.success) {
-            return result.data.filter(t => t.type === 'payment');
-        }
-        return [];
-    } catch (error) {
-        return [];
-    }
-}
+
 // ==================== SUBMIT TRANSACTION ====================
 async function submitTransaction() {
     const date = document.getElementById('txtDate')?.value || new Date().toISOString().split('T')[0];
@@ -319,7 +315,13 @@ async function submitTransaction() {
             storeName = 'sales';
             break;
     }
-
+// Inside submitTransaction, after the switch statement, add:
+if (currentMode === 'payment') {
+    const settlements = await getSettlements();
+    if (!validatePaymentRef(paymentRef, party, price, settlements)) {
+        return;
+    }
+}
     if (isOnlineFlag) {
         try {
             const response = await fetch(`${API_BASE}${endpoint}`, {
